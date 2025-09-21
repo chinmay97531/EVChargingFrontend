@@ -37,7 +37,7 @@ function NavBar(){
                 
                 <ul
           className={`flex flex-col md:flex-row md:w-auto md:justify-between text-center gap-6 md:gap-10 [&>li]:cursor-pointer font-medium absolute md:static top-20 right-0 w-64 transition-transform duration-300 ease-in-out ${openMenu ? "translate-x-0" : "translate-x-full"} md:translate-x-0 h-auto md:h-auto p-5 md:p-0 shadow-lg md:shadow-none`}>
-                    <div onClick={() => navigate("/")}><li className="hover:text-blue-400 dark:hover:text-teal-200">Home</li> </div>
+                    {/* <div onClick={() => navigate("/")}><li className="hover:text-blue-400 dark:hover:text-teal-200">Home</li> </div> */}
                     <div onClick={() => navigate("/profile")}><li className="hover:text-blue-400 dark:hover:text-teal-200">Profile</li> </div>
                     <div onClick={() => navigate("/bookings")}><li className="hover:text-blue-400 dark:hover:text-teal-200">Bookings</li> </div>
                     <div onClick={() => navigate("/ChargingStations/state")}><li className="hover:text-blue-400 dark:hover:text-teal-200">Charging Stations</li> </div>
