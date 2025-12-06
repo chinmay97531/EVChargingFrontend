@@ -1,70 +1,115 @@
-import { useState } from "react";
-import DayMode from "../icons/DayMode.svg";
-import NightMode from "../icons/NightMode.svg";
-import OpenMenu from "../icons/DropdownMenuOpen.svg";
-import CloseMenu from "../icons/DropdownMenuClose.svg";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Menu, X, LogOut, BarChart3, Car, CreditCard, MapPin, BookOpen, User } from 'lucide-react'
 
-function NavBar(){
+const Navbar: React.FC = () => {
+  const [isOpen, setIsOpen] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
 
-    const navigate = useNavigate();
-    const [openMenu, setOpenMenu] = useState(false);
-    const [isDarkMode, setIsDarkMode] = useState(document.documentElement.classList.contains("dark"));
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('userId')
+    navigate('/auth')
+  }
 
+  const isActive = (path: string) => location.pathname === path
 
-    function menuHandler(): void{
-        setOpenMenu((prev) =>
-            !prev
-        );
-    }
+  const links = [
+    { to: '/', label: 'Dashboard', icon: MapPin },
+    { to: '/vehicles', label: 'Vehicles', icon: Car },
+    { to: '/bookings', label: 'Bookings', icon: BookOpen },
+    { to: '/payment', label: 'Payment', icon: CreditCard },
+    { to: '/stats', label: 'Statistics', icon: BarChart3 },
+    { to: '/profile', label: 'Profile', icon: User },
+  ]
 
-    function Toggle(): void{
-        document.documentElement.classList.toggle("dark");
-        setIsDarkMode((prev) => !prev);
-    }
+  return (
+    <nav className="bg-white shadow-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          {/* Logo */}
+          <div className="flex items-center">
+            <Link to="/" className="text-2xl font-bold text-indigo-600">
+              ⚡ EVParking
+            </Link>
+          </div>
 
-    function signout() {
-        localStorage.removeItem("token");
-        navigate("/auth");
-    }
+          {/* Desktop Menu */}
+          <div className="hidden md:flex items-center space-x-1">
+            {links.map(({ to, label, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition ${
+                  isActive(to)
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <Icon className="w-4 h-4 mr-1" />
+                {label}
+              </Link>
+            ))}
+            <button
+              onClick={handleLogout}
+              className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition ml-2"
+            >
+              <LogOut className="w-4 h-4 mr-1" />
+              Logout
+            </button>
+          </div>
 
-    return (
-        <nav>
-            <div id="navbar" className="flex justify-between items-center px-7 py-5 w-[90%] fixed top-5 left-1/2 translate-x-[-50%] rounded-xl shadow-xl bg-white dark:bg-gray-800 dark:text-white dark:shadow-xl">
-                <div className="text-2xl md:text-4xl font-bold italic uppercase text-gray-700 dark:text-gray-300">
-                    <div>EV Charging</div>
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:bg-gray-100"
+            >
+              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isOpen && (
+        <div className="md:hidden border-t border-gray-200">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            {links.map(({ to, label, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setIsOpen(false)}
+                className={`block px-3 py-2 rounded-md text-base font-medium transition ${
+                  isActive(to)
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                <div className="flex items-center">
+                  <Icon className="w-4 h-4 mr-2" />
+                  {label}
                 </div>
-                
-                <ul
-          className={`flex flex-col md:flex-row md:w-auto md:justify-between text-center gap-6 md:gap-10 [&>li]:cursor-pointer font-medium absolute md:static top-20 right-0 w-64 transition-transform duration-300 ease-in-out ${openMenu ? "translate-x-0" : "translate-x-full"} md:translate-x-0 h-auto md:h-auto p-5 md:p-0 shadow-lg md:shadow-none`}>
-                    {/* <div onClick={() => navigate("/")}><li className="hover:text-blue-400 dark:hover:text-teal-200">Home</li> </div> */}
-                    <div onClick={() => navigate("/profile")}><li className="hover:text-blue-400 dark:hover:text-teal-200">Profile</li> </div>
-                    <div onClick={() => navigate("/bookings")}><li className="hover:text-blue-400 dark:hover:text-teal-200">Bookings</li> </div>
-                    <div onClick={() => navigate("/ChargingStations/state")}><li className="hover:text-blue-400 dark:hover:text-teal-200">Charging Stations</li> </div>
-                    <div onClick={signout}><li className="hover:text-blue-400 dark:hover:text-teal-200">Logout</li> </div>
-                    <li onClick={Toggle} className="hover:text-blue-400 dark:hover:text-teal-200">
-                    <img
-                        src={isDarkMode ? DayMode : NightMode}
-                        alt={isDarkMode ? "Day Mode" : "Night Mode"}
-                        className="w-6 h-6 dark:invert translate-x-[400%] md:translate-0"
-                    />    
-                    </li>
-                </ul>
-
-                    <div className="md:hidden">
-                        <button onClick={menuHandler}>
-                            <img
-                                src={openMenu ? CloseMenu : OpenMenu}
-                                alt="Menu Icon"
-                                className="w-6 h-6 dark:invert"
-                            />
-                        </button>
-                    </div>
-
-            </div>   
-                    
-        </nav>
-    )
+              </Link>
+            ))}
+            <button
+              onClick={() => {
+                handleLogout()
+                setIsOpen(false)
+              }}
+              className="w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50 transition"
+            >
+              <div className="flex items-center">
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </div>
+            </button>
+          </div>
+        </div>
+      )}
+    </nav>
+  )
 }
 
-export default NavBar;
+export default Navbar

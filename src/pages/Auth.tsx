@@ -1,7 +1,6 @@
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { BACKEND_URL } from "../config";
+import { useAuth } from "../contexts/AuthContext";
 
 function Authentication() {
   const usernameUpRef = useRef<HTMLInputElement>(null);
@@ -12,50 +11,57 @@ function Authentication() {
   const passwordInRef = useRef<HTMLInputElement>(null);
 
   const navigate = useNavigate();
+  const { login, signup } = useAuth();
   const [isChecked, setIsChecked] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleCheckboxChange = () => {
     setIsChecked(!isChecked);
   };
 
-  async function signup() {
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault();
     const username = usernameUpRef.current?.value;
     const email = emailUpRef.current?.value;
     const password = passwordUpRef.current?.value;
-    try {
-      const res = await axios.post(BACKEND_URL + "/signup", {
-        username,
-        email,
-        password,
-      });
-
-      alert("You have signed up!");
-      alert(res);
-      navigate("/");
-    } catch (error) {
-      alert("Error signing up");
-      console.error(error);
+    
+    if (!username || !email || !password) {
+      alert("Please fill in all fields");
       return;
+    }
+
+    setIsLoading(true);
+    try {
+      await signup({ username, email, password });
+      alert("You have signed up successfully!");
+      navigate("/profile");
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Error signing up");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  async function signin(e: React.FormEvent) {
+  async function handleSignin(e: React.FormEvent) {
     e.preventDefault();
-    const username = emailInRef.current?.value;
+    const email = emailInRef.current?.value;
     const password = passwordInRef.current?.value;
-    try {
-      const respone = await axios.post(BACKEND_URL + "/signin", {
-        username,
-        password,
-      });
-      const jwt = respone.data.token;
-      localStorage.setItem("token", jwt);
-      navigate("/");
-    }
-     catch(e: string | any) {
-      console.error(e);
-      alert(e.response.data.message);
+    
+    if (!email || !password) {
+      alert("Please fill in all fields");
       return;
+    }
+
+    setIsLoading(true);
+    try {
+      await login({ email, password });
+      navigate("/profile");
+    } catch (error: any) {
+      alert(error.response?.data?.message || "Error signing in");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -71,7 +77,7 @@ function Authentication() {
           aria-hidden="false"
         />
         <div className="w-full h-full relative">
-          <form onSubmit={signup}>
+          <form onSubmit={handleSignup}>
             <label
               htmlFor="chk"
               aria-hidden="true"
@@ -104,9 +110,10 @@ function Authentication() {
             />
             <button
               type="submit"
-              className="w-3/5 h-10 mx-auto mt-[30px] block text-white bg-[#573b8a] font-bold text-base rounded-md border-none outline-none transition-colors duration-200 ease-in hover:bg-[#6d44b8] cursor-pointer"
+              disabled={isLoading}
+              className="w-3/5 h-10 mx-auto mt-[30px] block text-white bg-[#573b8a] font-bold text-base rounded-md border-none outline-none transition-colors duration-200 ease-in hover:bg-[#6d44b8] cursor-pointer disabled:opacity-50"
             >
-              Sign up
+              {isLoading ? "Signing up..." : "Sign up"}
             </button>
           </form>
         </div>
@@ -116,7 +123,7 @@ function Authentication() {
             isChecked ? "translate-y-[340px]" : "translate-y-[100px]"
           }`}
         >
-          <form onSubmit={signin}>
+          <form onSubmit={handleSignin}>
             <label
               htmlFor="chk"
               className={`text-[#573b8a] text-[2.3em] flex justify-center mt-[20px] font-bold cursor-pointer transition-transform duration-800 ease-in-out ${
@@ -144,9 +151,10 @@ function Authentication() {
             />
             <button
               type="submit"
-              className="w-3/5 h-10 mx-auto mt-[30px] block text-white bg-[#573b8a] font-bold text-base rounded-md border-none outline-none transition-colors duration-200 ease-in hover:bg-[#6d44b8] cursor-pointer"
+              disabled={isLoading}
+              className="w-3/5 h-10 mx-auto mt-[30px] block text-white bg-[#573b8a] font-bold text-base rounded-md border-none outline-none transition-colors duration-200 ease-in hover:bg-[#6d44b8] cursor-pointer disabled:opacity-50"
             >
-              Login
+              {isLoading ? "Logging in..." : "Login"}
             </button>
           </form>
         </div>

@@ -1,35 +1,45 @@
-import { ReactElement } from "react";
+import { ButtonHTMLAttributes, ReactNode } from "react";
 
-interface ButtonProps {
-    variant: Variants;
-    size: "sm" | "md" | "lg";
-    text: string;
-    startIcon?: ReactElement;
-    endIcon?: ReactElement;
-    onClick?: () => void;
-    fullWidth?: boolean;
-    loading?: boolean;
-}
-type Variants = "primary" | "secondary"
-
-const variantStyle = {
-    "primary": "bg-[#5046e4] text-white",
-    "secondary": "bg-[#e0e7fe] text-[#3e38a7]"
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: "primary" | "secondary" | "danger" | "outline";
+  size?: "sm" | "md" | "lg";
+  isLoading?: boolean;
+  children: ReactNode;
 }
 
-const sizeStyle = {
-    "sm": "py-2 px-3",
-    "md": "py-4 px-4",
-    "lg": "py-6 px-5"
-}
+export const Button = ({
+  variant = "primary",
+  size = "md",
+  isLoading = false,
+  children,
+  className = "",
+  disabled,
+  ...props
+}: ButtonProps) => {
+  const baseClasses = "font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2";
+  
+  const variantClasses = {
+    primary: "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500",
+    secondary: "bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500",
+    danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+    outline: "border-2 border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500",
+  };
 
-const defaultStyles = "rounded-xl font-light flex items-center cursor-pointer";
+  const sizeClasses = {
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2 text-base",
+    lg: "px-6 py-3 text-lg",
+  };
 
-
-export const Button = (props: ButtonProps) => {
-
-    return <button onClick={props.onClick} className={`${variantStyle[props.variant]} ${defaultStyles} 
-    ${sizeStyle[props.size]} ${props.fullWidth ? "w-full flex justify-center items-center" : ""} ${props.loading ? "opacity-45" : ""}`} disabled={props.loading}>
-        {props.startIcon ? <div className="pr-2">{props.startIcon}</div> : null} { props.text } {props.endIcon}
-        </button>
-}
+  return (
+    <button
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className} ${
+        (disabled || isLoading) ? "opacity-50 cursor-not-allowed" : ""
+      }`}
+      disabled={disabled || isLoading}
+      {...props}
+    >
+      {isLoading ? "Loading..." : children}
+    </button>
+  );
+};

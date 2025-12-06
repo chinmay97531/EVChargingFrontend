@@ -1,220 +1,419 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { User, Car, Battery, DollarSign, TrendingUp, Zap, Calendar, Trash2, Key } from "lucide-react";
+import { Card } from "../components/ui/Card";
+import { BatteryDisplay } from "../components/BatteryDisplay";
+import { Table, TableRow, TableCell } from "../components/ui/Table";
+import { Button } from "../components/ui/Button";
+import { Modal } from "../components/ui/Modal";
+import { ChargingSchedulePredictor } from "../components/ChargingSchedulePredictor";
+import { useCars, useDeleteCar } from "../hooks/useCars";
+import { useBatteryStatus } from "../hooks/useBatteryStatus";
+import { usePaymentData } from "../hooks/usePaymentData";
+import { useStatistics } from "../hooks/useStatistics";
+import { userService } from "../services/user.service";
+import { LineChart } from "../components/charts/LineChart";
+import { BarChart } from "../components/charts/BarChart";
+import { MultiLineChart } from "../components/charts/MultiLineChart";
 import NavBar from "../components/Navbar";
-import { useNavigate } from "react-router-dom";
 
-function Profile() {
-  const navigate = useNavigate();
+export default function Profile() {
+  const [selectedCarId, setSelectedCarId] = useState<number | undefined>();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [carToDelete, setCarToDelete] = useState<number | null>(null);
+
+  const { data: userData } = useQuery({
+    queryKey: ["userDetails"],
+    queryFn: () => userService.getUserDetails(),
+  });
+
+  const { data: carsData, isLoading: carsLoading } = useCars();
+  const { data: batteryData, isLoading: batteryLoading } = useBatteryStatus(selectedCarId);
+  const { data: paymentData, isLoading: paymentLoading } = usePaymentData();
+  const { data: statisticsData, isLoading: statsLoading } = useStatistics(selectedCarId);
+
+  const deleteCarMutation = useDeleteCar();
+
+  const cars = carsData?.data?.data || [];
+  const user = userData?.data?.data;
+  const batteryStatus = batteryData?.data?.data;
+  const paymentInfo = paymentData?.data?.data;
+  const statistics = statisticsData?.data?.data;
+
+  // Set first car as selected by default
+  if (cars.length > 0 && !selectedCarId) {
+    setSelectedCarId(cars[0].id);
+  }
+
+  const handleDeleteCar = (carId: number) => {
+    setCarToDelete(carId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (carToDelete) {
+      deleteCarMutation.mutate(carToDelete, {
+        onSuccess: () => {
+          setShowDeleteModal(false);
+          setCarToDelete(null);
+          if (selectedCarId === carToDelete) {
+            setSelectedCarId(undefined);
+          }
+        },
+      });
+    }
+  };
+
+  // Transform chart data
+  const socTrendData = statistics?.graphical?.socTrends
+    ? statistics.graphical.socTrends.labels.map((label, index) => ({
+        date: label,
+        soc: statistics.graphical.socTrends.datasets[0].data[index],
+      }))
+    : [];
+
+  const revenueTrendData = statistics?.graphical?.revenueTrends
+    ? statistics.graphical.revenueTrends.labels.map((label, index) => ({
+        date: label,
+        revenue: statistics.graphical.revenueTrends.datasets[0].data[index],
+      }))
+    : [];
+
+  const bookingTrendData = statistics?.graphical?.chargingSessionsOverTime
+    ? statistics.graphical.chargingSessionsOverTime.labels.map((label, index) => ({
+        date: label,
+        sessions: statistics.graphical.chargingSessionsOverTime.datasets[0].data[index],
+      }))
+    : [];
+
+  const energyConsumptionData = statistics?.graphical?.energyConsumption
+    ? statistics.graphical.energyConsumption.labels.map((label, index) => ({
+        date: label,
+        grid: statistics.graphical.energyConsumption.datasets[0].data[index],
+        solar: statistics.graphical.energyConsumption.datasets[1].data[index],
+        total: statistics.graphical.energyConsumption.datasets[2].data[index],
+      }))
+    : [];
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] text-[#6F8BA4]">
+    <div className="min-h-screen bg-gray-50">
       <NavBar />
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Profile Dashboard</h1>
 
-      <section id="profile" className="py-[100px]">
-        <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
-            <div>
-              <h1 className="text-[#20247b] text-[38px] md:text-[44px] font-extrabold leading-tight">
-                BE 6E
-              </h1>
-              <p className="text-[16px]">Track your vehicle, sessions, and bookings at a glance.</p>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="flex flex-wrap gap-3">
-              <a
-                href="/ChargingStations/state"
-                className="inline-flex items-center rounded-xl px-5 py-2.5 text-white bg-[#20247b] hover:bg-[#1a1e6b] transition shadow"
-              >
-                Book Charging Slot
-              </a>
-              <a
-                href="#"
-                className="inline-flex items-center rounded-xl px-5 py-2.5 text-[#20247b] bg-white border border-[#20247b]/20 hover:bg-slate-50 transition shadow-sm"
-              >
-                Find Nearby Stations
-              </a>
-              <a
-                href="#"
-                className="inline-flex items-center rounded-xl px-5 py-2.5 text-[#20247b] bg-white border border-[#20247b]/20 hover:bg-slate-50 transition shadow-sm"
-              >
-                Add Vehicle
-              </a>
-            </div>
-          </div>
-
-          {/* Top grid: Vehicle + Stats */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-8">
-            {/* Vehicle Card */}
-            <div className="lg:col-span-1 rounded-2xl bg-white p-6 shadow-[0_10px_30px_rgba(31,45,61,0.12)] border border-white/60">
-              <h3 className="text-[#20247b] font-bold text-2xl mb-1">Primary Vehicle</h3>
-              <p className="text-sm mb-4">Tata Nexon EV • MH 12 AB 1234</p>
-
-              <div className="rounded-xl bg-[#f8fafc] p-4 border border-slate-200/70 mb-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="grid place-content-center w-12 h-12 rounded-xl bg-[#fc5356]/10">
-                    <span className="text-2xl" role="img" aria-label="car">🚗</span>
-                  </div>
-                  <div>
-                    <div className="font-semibold text-[#20247b]">Battery</div>
-                    <div className="text-sm">Current SoC: <span className="font-semibold text-[#20247b]">62%</span></div>
-                  </div>
-                </div>
-
-                {/* Battery progress */}
-                <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden">
-                  <div className="h-full bg-[#fc5356]" style={{ width: "62%" }} />
-                </div>
-
-                <div className="mt-3 grid grid-cols-3 gap-3 text-sm">
-                  <div className="rounded-lg bg-white p-2 border border-slate-200">
-                    <div className="text-xs">Est. Range</div>
-                    <div className="font-semibold text-[#20247b]">170 km</div>
-                  </div>
-                  <div className="rounded-lg bg-white p-2 border border-slate-200">
-                    <div className="text-xs">Connector</div>
-                    <div className="font-semibold text-[#20247b]">CCS2</div>
-                  </div>
-                  <div className="rounded-lg bg-white p-2 border border-slate-200">
-                    <div className="text-xs">Plan</div>
-                    <div className="font-semibold text-[#20247b]">Gold</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Preferred Stations */}
+        {/* User Information */}
+        <Card title="User Information" icon={<User size={20} />} className="mb-6">
+          {user ? (
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <div className="text-[#20247b] font-semibold mb-2">Preferred Stations</div>
-                <div className="flex flex-wrap gap-2">
-                  {["Sector 17 Plaza", "City Mall Parking", "Tech Park B1"].map((s) => (
-                    <span key={s} className="px-3 py-1 rounded-full bg-white border border-slate-200 text-sm">
-                      {s}
-                    </span>
-                  ))}
-                </div>
+                <p className="text-sm text-gray-600">Username</p>
+                <p className="text-lg font-semibold text-gray-800">{user.username}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Email</p>
+                <p className="text-lg font-semibold text-gray-800">{user.email}</p>
               </div>
             </div>
+          ) : (
+            <p className="text-gray-500">Loading user information...</p>
+          )}
+        </Card>
 
-            {/* Stats */}
-            <div className="lg:col-span-2 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <StatCard number="1,240 kWh" label="Lifetime Energy" />
-              <StatCard number="86" label="Charging Sessions" />
-              <StatCard number="₹ 18,560" label="Total Spend" />
-              <StatCard number="920 kg" label="CO₂ Saved" />
-            </div>
-          </div>
-
-          {/* Middle grid: Upcoming + Recent + Payments */}
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Upcoming Booking */}
-            <div className="rounded-2xl bg-white p-6 shadow-[0_10px_30px_rgba(31,45,61,0.12)] border border-white/60">
-              <h3 className="text-[#20247b] font-bold text-xl mb-3">Upcoming Booking</h3>
-              <div className="rounded-xl border border-slate-200 p-4 bg-[#f8fafc]">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-sm">Station</div>
-                    <div className="font-semibold text-[#20247b]">City Mall Parking</div>
-                  </div>
-                  <span className="px-3 py-1 rounded-full text-xs bg-[#fc5356]/10 text-[#fc5356] font-semibold">
-                    Reserved
-                  </span>
-                </div>
-                <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
-                  <KeyVal k="Date" v="Aug 24, 2025" />
-                  <KeyVal k="Slot" v="06:30 – 07:30 PM" />
-                  <KeyVal k="Connector" v="CCS2 • 60 kW" />
-                  <KeyVal k="Est. Cost" v="₹ 160 – 190" />
-                </div>
-                <div className="mt-4 flex gap-3">
-                  <a href="/ChargingStations/state" className="px-4 py-2 rounded-lg bg-[#20247b] text-white hover:bg-[#1a1e6b] transition">
-                    Manage
-                  </a>
-                  <a href="#" className="px-4 py-2 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 transition">
-                    Directions
-                  </a>
-                </div>
+        {/* Find Cars Section with API Key */}
+        <Card title="Find Cars" icon={<Car size={20} />} className="mb-6">
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-gray-600 mb-2">API Key</p>
+              <div className="flex items-center gap-2">
+                <Key size={16} className="text-gray-500" />
+                <code className="px-3 py-2 bg-gray-100 rounded text-sm font-mono">
+                  {import.meta.env.VITE_API_KEY || "DEMO_API_KEY_12345"}
+                </code>
               </div>
             </div>
-
-            {/* Recent Sessions */}
-            <div className="rounded-2xl bg-white p-6 shadow-[0_10px_30px_rgba(31,45,61,0.12)] border border-white/60">
-              <h3 className="text-[#20247b] font-bold text-xl mb-3">Recent Sessions</h3>
-              <div className="divide-y divide-slate-200">
-                {[
-                  { place: "Tech Park B1", date: "Aug 20, 2025", kwh: 18.4, cost: 285, time: "42m" },
-                  { place: "Sector 17 Plaza", date: "Aug 16, 2025", kwh: 12.2, cost: 190, time: "30m" },
-                  { place: "City Mall Parking", date: "Aug 10, 2025", kwh: 25.0, cost: 375, time: "58m" },
-                  { place: "Metro P3", date: "Aug 02, 2025", kwh: 9.6, cost: 150, time: "22m" },
-                ].map((s, i) => (
-                  <div key={i} className="py-3 flex items-center justify-between">
-                    <div>
-                      <div className="font-semibold text-[#20247b]">{s.place}</div>
-                      <div className="text-xs">{s.date} • {s.time}</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-sm">{s.kwh} kWh</div>
-                      <div className="font-semibold">₹ {s.cost}</div>
+            {carsLoading ? (
+              <p className="text-gray-500">Loading cars...</p>
+            ) : cars.length === 0 ? (
+              <p className="text-gray-500">No cars found. Add a car to get started.</p>
+            ) : (
+              <div className="space-y-3">
+                {cars.map((car) => (
+                  <div
+                    key={car.id}
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      selectedCarId === car.id
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() => setSelectedCarId(car.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-gray-800">
+                          {car.name} {car.model}
+                        </h3>
+                        <p className="text-sm text-gray-600">License: {car.number}</p>
+                        <p className="text-sm text-gray-600">
+                          Port: {car.typeOfPort} • {car.fastSupporting ? "Fast" : "Slow"} Charging
+                        </p>
+                      </div>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteCar(car.id);
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="mt-4">
-                <a href="#" className="text-[#20247b] font-semibold hover:underline">View all sessions</a>
-              </div>
-            </div>
-
-            {/* Payment / Preferences */}
-            <div className="rounded-2xl bg-white p-6 shadow-[0_10px_30px_rgba(31,45,61,0.12)] border border-white/60">
-              <h3 className="text-[#20247b] font-bold text-xl mb-3">Payment & Preferences</h3>
-              <div className="grid grid-cols-1 gap-3 text-sm">
-                <KeyVal k="Default Payment" v="Visa •••• 5621" />
-                <KeyVal k="Billing Cycle" v="Monthly (1st of every month)" />
-                <KeyVal k="Auto-Start" v="Enabled for preferred stations" />
-                <KeyVal k="Notifications" v="Push + Email" />
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="px-3 py-1 rounded-full bg-[#20247b]/10 text-[#20247b] text-xs font-semibold">Smart Charging</span>
-                <span className="px-3 py-1 rounded-full bg-[#fc5356]/10 text-[#fc5356] text-xs font-semibold">Peak Avoidance</span>
-                <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-700 text-xs font-semibold">Solar Priority</span>
-              </div>
-            </div>
+            )}
           </div>
+        </Card>
 
-          {/* Footer CTA */}
-          <div className="mt-10 flex flex-col items-center">
-            <div  onClick={
-              () => navigate("/ChargingStations/state")
-            }
-              className="inline-flex items-center rounded-xl px-6 py-3 text-white bg-[#fc5356] hover:bg-[#e64a4c] transition shadow"
+        {/* Car Details */}
+        {selectedCarId && cars.find((c) => c.id === selectedCarId) && (
+          <Card title="Car Details" icon={<Car size={20} />} className="mb-6">
+            {(() => {
+              const car = cars.find((c) => c.id === selectedCarId);
+              return car ? (
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Car Name</p>
+                    <p className="text-lg font-semibold text-gray-800">{car.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Model</p>
+                    <p className="text-lg font-semibold text-gray-800">{car.model}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">License Number</p>
+                    <p className="text-lg font-semibold text-gray-800">{car.number}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Battery Capacity</p>
+                    <p className="text-lg font-semibold text-gray-800">{car.capacityOfBattery} kWh</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Port Type</p>
+                    <p className="text-lg font-semibold text-gray-800">{car.typeOfPort}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Charging Support</p>
+                    <p className="text-lg font-semibold text-gray-800">
+                      {car.fastSupporting ? "Fast Charging" : "Slow Charging"}
+                    </p>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+          </Card>
+        )}
+
+        {/* Battery Details */}
+        {batteryLoading ? (
+          <Card className="mb-6">
+            <p className="text-gray-500">Loading battery status...</p>
+          </Card>
+        ) : batteryStatus ? (
+          <BatteryDisplay batteryStatus={batteryStatus} />
+        ) : (
+          <Card className="mb-6">
+            <p className="text-gray-500">No battery data available. Please select a car.</p>
+          </Card>
+        )}
+
+        {/* Charging Schedule Predictor */}
+        <ChargingSchedulePredictor />
+
+        {/* Payment Data */}
+        <Card title="Payment Information" icon={<DollarSign size={20} />} className="mb-6">
+          {paymentLoading ? (
+            <p className="text-gray-500">Loading payment data...</p>
+          ) : paymentInfo ? (
+            <div className="space-y-6">
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-gray-600">Total Paid</p>
+                  <p className="text-2xl font-bold text-blue-600">₹{paymentInfo.totalPaid.toFixed(2)}</p>
+                </div>
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <p className="text-sm text-gray-600">Total Savings</p>
+                  <p className="text-2xl font-bold text-green-600">₹{paymentInfo.totalSavings.toFixed(2)}</p>
+                </div>
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">Total Payments</p>
+                  <p className="text-2xl font-bold text-gray-800">{paymentInfo.totalPayments}</p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Payment History</h3>
+                <Table
+                  headers={["Date", "Amount", "Original", "Savings", "Mode", "Status"]}
+                >
+                  {paymentInfo.paymentRecords.map((record) => (
+                    <TableRow key={record.id}>
+                      <TableCell>
+                        {new Date(record.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="font-semibold">₹{record.amount.toFixed(2)}</TableCell>
+                      <TableCell>₹{record.originalAmount.toFixed(2)}</TableCell>
+                      <TableCell className="text-green-600">₹{record.savings.toFixed(2)}</TableCell>
+                      <TableCell>{record.paymentMode}</TableCell>
+                      <TableCell>
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${
+                            record.status === "SUCCESS"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {record.status}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </Table>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500">No payment data available.</p>
+          )}
+        </Card>
+
+        {/* Numerical Statistics */}
+        {statistics && (
+          <Card title="Statistics Overview" icon={<TrendingUp size={20} />} className="mb-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <p className="text-sm text-gray-600">Total Sessions</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {statistics.numerical.totalChargingSessions}
+                </p>
+              </div>
+              <div className="p-4 bg-green-50 rounded-lg">
+                <p className="text-sm text-gray-600">Completed</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {statistics.numerical.completedSessions}
+                </p>
+              </div>
+              <div className="p-4 bg-purple-50 rounded-lg">
+                <p className="text-sm text-gray-600">Avg Duration</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {statistics.numerical.averageSessionDuration.toFixed(1)} min
+                </p>
+              </div>
+              <div className="p-4 bg-orange-50 rounded-lg">
+                <p className="text-sm text-gray-600">Energy Consumed</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {statistics.numerical.totalEnergyConsumed.toFixed(1)} kWh
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Graphical Statistics */}
+        {statsLoading ? (
+          <Card className="mb-6">
+            <p className="text-gray-500">Loading statistics...</p>
+          </Card>
+        ) : statistics ? (
+          <div className="space-y-6 mb-6">
+            {/* SOC Trend */}
+            {socTrendData.length > 0 && (
+              <Card title="SOC Trend" icon={<Battery size={20} />}>
+                <LineChart
+                  data={socTrendData}
+                  dataKey="soc"
+                  xAxisKey="date"
+                  label="State of Charge (%)"
+                  color="#3b82f6"
+                />
+              </Card>
+            )}
+
+            {/* Revenue Trend */}
+            {revenueTrendData.length > 0 && (
+              <Card title="Revenue Trend" icon={<DollarSign size={20} />}>
+                <BarChart
+                  data={revenueTrendData}
+                  dataKey="revenue"
+                  xAxisKey="date"
+                  label="Revenue (₹)"
+                  color="#10b981"
+                />
+              </Card>
+            )}
+
+            {/* Booking Trend */}
+            {bookingTrendData.length > 0 && (
+              <Card title="Booking Trend" icon={<Calendar size={20} />}>
+                <BarChart
+                  data={bookingTrendData}
+                  dataKey="sessions"
+                  xAxisKey="date"
+                  label="Charging Sessions"
+                  color="#f59e0b"
+                />
+              </Card>
+            )}
+
+            {/* Energy Consumption Trend */}
+            {energyConsumptionData.length > 0 && (
+              <Card title="Energy Consumption Trend" icon={<Zap size={20} />}>
+                <MultiLineChart
+                  labels={statistics.graphical.energyConsumption.labels}
+                  datasets={statistics.graphical.energyConsumption.datasets.map((ds, idx) => ({
+                    label: ds.label,
+                    data: ds.data,
+                    color: idx === 0 ? "#ef4444" : idx === 1 ? "#10b981" : "#3b82f6",
+                  }))}
+                />
+              </Card>
+            )}
+          </div>
+        ) : (
+          <Card className="mb-6">
+            <p className="text-gray-500">No statistics available. Please select a car.</p>
+          </Card>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        <Modal
+          isOpen={showDeleteModal}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setCarToDelete(null);
+          }}
+          title="Delete Car"
+        >
+          <p className="mb-4">Are you sure you want to delete this car? This action cannot be undone.</p>
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDeleteModal(false);
+                setCarToDelete(null);
+              }}
             >
-              Start New Session
-            </div>
-            <p className="text-xs mt-2 opacity-80">Check availability at your preferred stations.</p>
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={confirmDelete}
+              isLoading={deleteCarMutation.isPending}
+            >
+              Delete
+            </Button>
           </div>
-        </div>
-      </section>
+        </Modal>
+      </div>
     </div>
   );
 }
-
-/* ---------- Small presentational components ---------- */
-
-function StatCard({ number, label }) {
-  return (
-    <div className="rounded-2xl bg-white p-6 text-center shadow-[0_10px_30px_rgba(31,45,61,0.12)] border border-white/60">
-      <h6 className="text-[#20247b] font-extrabold text-3xl md:text-4xl leading-none">{number}</h6>
-      <p className="mt-1 m-0 font-semibold">{label}</p>
-    </div>
-  );
-}
-
-function KeyVal({ k, v }) {
-  return (
-    <div className="flex items-center justify-between gap-4 border-b last:border-none border-slate-200/70 pb-2">
-      <span className="text-[#20247b] font-semibold">{k}</span>
-      <span className="text-[14px]">{v}</span>
-    </div>
-  );
-}
-
-export default Profile;

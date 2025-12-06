@@ -1,133 +1,352 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Calendar, Clock, MapPin, Search, Zap, Battery, Car, Plus } from "lucide-react";
+import { Card } from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Dropdown } from "../components/ui/Dropdown";
+import { Modal } from "../components/ui/Modal";
+import { StationCard } from "../components/StationCard";
+import { BatteryDisplay } from "../components/BatteryDisplay";
+import { useBookings, useCreateBooking } from "../hooks/useBookings";
+import { useCars } from "../hooks/useCars";
+import { useBatteryStatus } from "../hooks/useBatteryStatus";
+import { stationService, Station } from "../services/station.service";
+import { bookingService } from "../services/booking.service";
 import NavBar from "../components/Navbar";
-import Tata1 from "../Images/TataCurvvEV.png";
-import Tata2 from "../Images/TataNexonEV.png";
-import Hyundai1 from "../Images/HyundaiCreta1.png";
-import Mahindra1 from "../Images/MahindraBE6.png";
-import Mahindra2 from "../Images/MahindraXEV9e.png";
-import MG1 from "../Images/MGCometEV.png";
 
-function Bookings() {
-  // Tata Curvv EV
-  const [battery1, setBattery1] = useState(75);
-  const [timeLeft1, setTimeLeft1] = useState("1h 30m");
-  const [amountToPay1, setAmountToPay1] = useState(150);
-  const [date1, setDate1] = useState("12/10/2021");
+type SearchType = "location" | "name" | "pincode" | "city";
 
-  // Tata Nexon EV
-  const [battery2, setBattery2] = useState(62);
-  const [timeLeft2, setTimeLeft2] = useState("1h 05m");
-  const [amountToPay2, setAmountToPay2] = useState(132);
-  const [date2, setDate2] = useState("06/02/2022");
+export default function Bookings() {
+  const [searchType, setSearchType] = useState<SearchType>("location");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [stations, setStations] = useState<Station[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedStation, setSelectedStation] = useState<Station | null>(null);
+  const [selectedCarId, setSelectedCarId] = useState<string>("");
+  const [bookingDate, setBookingDate] = useState("");
+  const [bookingTime, setBookingTime] = useState("");
+  const [chargerType, setChargerType] = useState("FAST");
 
-  // Hyundai Ioniq EV
-  const [battery3, setBattery3] = useState(89);
-  const [timeLeft3, setTimeLeft3] = useState("45m");
-  const [amountToPay3, setAmountToPay3] = useState(210);
-  const [date3, setDate3] = useState("23/08/2023");
+  const { data: bookingsData, isLoading: bookingsLoading } = useBookings();
+  const { data: carsData } = useCars();
+  const { data: batteryData } = useBatteryStatus(
+    selectedCarId ? parseInt(selectedCarId) : undefined
+  );
+  const createBookingMutation = useCreateBooking();
+  const queryClient = useQueryClient();
 
-  // Mahindra BE EV
-  const [battery4, setBattery4] = useState(54);
-  const [timeLeft4, setTimeLeft4] = useState("1h 50m");
-  const [amountToPay4, setAmountToPay4] = useState(180);
-  const [date4, setDate4] = useState("15/05/2024");
+  const bookings = bookingsData?.data?.data?.sessions || [];
+  const cars = carsData?.data?.data || [];
 
-  // Mahindra XEV EV
-  const [battery5, setBattery5] = useState(38);
-  const [timeLeft5, setTimeLeft5] = useState("2h 20m");
-  const [amountToPay5, setAmountToPay5] = useState(240);
-  const [date5, setDate5] = useState("19/12/2024");
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
 
-  // MG Comet EV
-  const [battery6, setBattery6] = useState(92);
-  const [timeLeft6, setTimeLeft6] = useState("35m");
-  const [amountToPay6, setAmountToPay6] = useState(95);
-  const [date6, setDate6] = useState("05/03/2025");
+    setIsSearching(true);
+    try {
+      let response;
+      switch (searchType) {
+        case "location":
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              async (position) => {
+                try {
+                  const res = await stationService.searchByLocation(
+                    position.coords.latitude,
+                    position.coords.longitude
+                  );
+                  setStations(res.data?.stations || []);
+                } catch (error) {
+                  console.error("Error searching by location:", error);
+                } finally {
+                  setIsSearching(false);
+                }
+              },
+              (error) => {
+                console.error("Geolocation error:", error);
+                setIsSearching(false);
+              }
+            );
+          }
+          return;
+        case "name":
+          response = await stationService.searchByName(searchQuery);
+          break;
+        case "pincode":
+          response = await stationService.searchByPostcode(searchQuery);
+          break;
+        case "city":
+          response = await stationService.searchByCity(searchQuery);
+          break;
+      }
+      if (response) {
+        setStations(response.data?.stations || []);
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleBookStation = (station: Station) => {
+    setSelectedStation(station);
+    setShowBookingModal(true);
+  };
+
+  const handleCreateBooking = async () => {
+    if (!selectedStation || !selectedCarId || !bookingDate || !bookingTime) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    try {
+      await createBookingMutation.mutateAsync({
+        lat: selectedStation.geolocation.latitude,
+        long: selectedStation.geolocation.longitude,
+      });
+      setShowBookingModal(false);
+      setSelectedStation(null);
+      queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    } catch (error) {
+      console.error("Booking error:", error);
+    }
+  };
 
   return (
-    <div className="bg-white h-screen dark:bg-gray-800">
+    <div className="min-h-screen bg-gray-50">
       <NavBar />
-      <div className="flex justify-center items-center translate-y-50 dark:text-white">
-        <div className="flex flex-col justify-center items-center">
-          <h1 className="text-2xl md:text-4xl">Bookings</h1>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-5 p-10">
-            {/* 1. Tata Curvv EV */}
-            <div className={`relative group overflow-hidden h-400px w-400px border-white dark:border-white transition-all duration-500 hover:scale-125`}>
-              <img src={Tata1} alt="Tata Curvv EV" className="w-full h-full" />
-              <div className="flex flex-col justify-center items-center absolute inset-0 z-10 bg-black/80 text-white p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <h3 className="text-lg font-bold mb-2">Battery Info</h3>
-                <div>Battrey Charged: <span className="font-semibold">{battery1}%</span></div>
-                <div>Time Taken: <span className="font-semibold">{timeLeft1}</span></div>
-                <div>Amount Paid: ₹<span className="font-semibold">{amountToPay1}</span></div>
-                <div>Date: <span className="font-semibold">{date1}</span></div>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Bookings</h1>
+
+        {/* Search Section */}
+        <Card title="Search Charging Stations" icon={<Search size={20} />} className="mb-6">
+          <div className="space-y-4">
+            <div className="grid md:grid-cols-4 gap-4">
+              <Dropdown
+                label="Search Type"
+                value={searchType}
+                onChange={(e) => setSearchType(e.target.value as SearchType)}
+                options={[
+                  { value: "location", label: "Current Location (GPS)" },
+                  { value: "name", label: "Station Name" },
+                  { value: "pincode", label: "Pincode" },
+                  { value: "city", label: "City" },
+                ]}
+              />
+              <div className="md:col-span-2">
+                <Input
+                  label={searchType === "location" ? "Click search to use GPS" : "Search Query"}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={
+                    searchType === "name"
+                      ? "Enter station name"
+                      : searchType === "pincode"
+                      ? "Enter pincode"
+                      : searchType === "city"
+                      ? "Enter city name"
+                      : ""
+                  }
+                  disabled={searchType === "location"}
+                />
+              </div>
+              <div className="flex items-end">
+                <Button
+                  onClick={handleSearch}
+                  isLoading={isSearching}
+                  className="w-full"
+                >
+                  Search
+                </Button>
               </div>
             </div>
-
-            {/* 2. Tata Nexon EV */}
-            <div className={`relative group overflow-hidden h-400px w-400px border-white dark:border-white transition-all duration-500 hover:scale-125`}>
-              <img src={Tata2} alt="Tata Nexon EV" className="w-full h-full" />
-              <div className="flex flex-col justify-center items-center absolute inset-0 z-10 bg-black/80 text-white p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <h3 className="text-lg font-bold mb-2">Battery Info</h3>
-                <div>Battrey Charged: <span className="font-semibold">{battery2}%</span></div>
-                <div>Time Taken: <span className="font-semibold">{timeLeft2}</span></div>
-                <div>Amount Paid: ₹<span className="font-semibold">{amountToPay2}</span></div>
-                <div>Date: <span className="font-semibold">{date2}</span></div>
               </div>
-            </div>
+        </Card>
 
-            {/* 3. Hyundai Ioniq EV */}
-            <div className={`relative group overflow-hidden h-400px w-400px border-white dark:border-white transition-all duration-500 hover:scale-125`}>
-              <img src={Hyundai1} alt="Hyundai Ioniq EV" className="w-full h-full" />
-              <div className="flex flex-col justify-center items-center absolute inset-0 z-10 bg-black/80 text-white p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <h3 className="text-lg font-bold mb-2">Battery Info</h3>
-                <div>Battrey Charged: <span className="font-semibold">{battery3}%</span></div>
-                <div>Time Taken: <span className="font-semibold">{timeLeft3}</span></div>
-                <div>Amount Paid: ₹<span className="font-semibold">{amountToPay3}</span></div>
-                <div>Date: <span className="font-semibold">{date3}</span></div>
-              </div>
+        {/* Search Results */}
+        {stations.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              Found {stations.length} Station(s)
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {stations.map((station, index) => (
+                <StationCard
+                  key={index}
+                  station={station}
+                  onSelect={() => handleBookStation(station)}
+                />
+              ))}
             </div>
-
-            {/* 4. Mahindra BE EV */}
-            <div className={`relative group overflow-hidden h-400px w-400px border-white dark:border-white transition-all duration-500 hover:scale-125`}>
-              <img src={Mahindra1} alt="Mahindra BE EV" className="w-full h-full" />
-              <div className="flex flex-col justify-center items-center absolute inset-0 z-10 bg-black/80 text-white p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <h3 className="text-lg font-bold mb-2">Battery Info</h3>
-                <div>Battrey Charged: <span className="font-semibold">{battery4}%</span></div>
-                <div>Time Taken: <span className="font-semibold">{timeLeft4}</span></div>
-                <div>Amount Paid: ₹<span className="font-semibold">{amountToPay4}</span></div>
-                <div>Date: <span className="font-semibold">{date4}</span></div>
-              </div>
-            </div>
-
-            {/* 5. Mahindra XEV EV */}
-            <div className={`relative group overflow-hidden h-400px w-400px border-white dark:border-white transition-all duration-500 hover:scale-125`}>
-              <img src={Mahindra2} alt="Mahindra XEV EV" className="w-full h-full" />
-              <div className="flex flex-col justify-center items-center absolute inset-0 z-10 bg-black/80 text-white p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <h3 className="text-lg font-bold mb-2">Battery Info</h3>
-                <div>Battrey Charged: <span className="font-semibold">{battery5}%</span></div>
-                <div>Time Taken: <span className="font-semibold">{timeLeft5}</span></div>
-                <div>Amount Paid: ₹<span className="font-semibold">{amountToPay5}</span></div>
-                <div>Date: <span className="font-semibold">{date5}</span></div>
-              </div>
-            </div>
-
-            {/* 6. MG Comet EV */}
-            <div className={`relative group overflow-hidden h-400px w-400px border-white dark:border-white transition-all duration-500 hover:scale-125`}>
-              <img src={MG1} alt="MG Comet EV" className="w-full h-full" />
-              <div className="flex flex-col justify-center items-center absolute inset-0 z-10 bg-black/80 text-white p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                <h3 className="text-lg font-bold mb-2">Battery Info</h3>
-                <div>Battrey Charged: <span className="font-semibold">{battery6}%</span></div>
-                <div>Time Taken: <span className="font-semibold">{timeLeft6}</span></div>
-                <div>Amount Paid: ₹<span className="font-semibold">{amountToPay6}</span></div>
-                <div>Date: <span className="font-semibold">{date6}</span></div>
-              </div>
-            </div>
-
           </div>
-        </div>
+        )}
+
+        {/* Current SOC/SOH Display */}
+        {selectedCarId && batteryData?.data?.data && (
+          <div className="mb-6">
+            <BatteryDisplay batteryStatus={batteryData.data.data} />
+          </div>
+        )}
+
+        {/* Booking Information */}
+        <Card title="Your Bookings" icon={<Calendar size={20} />} className="mb-6">
+          {bookingsLoading ? (
+            <p className="text-gray-500">Loading bookings...</p>
+          ) : bookings.length === 0 ? (
+            <p className="text-gray-500">No bookings found. Search and book a charging station to get started.</p>
+          ) : (
+            <div className="space-y-4">
+              {bookings.map((booking) => (
+                <div
+                  key={booking.id}
+                  className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-800 mb-2">
+                        {booking.chargingStation?.name || "Charging Station"}
+                      </h3>
+                      <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <Calendar size={16} />
+                          <span>
+                            {new Date(booking.startTime).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Clock size={16} />
+                          <span>
+                            {new Date(booking.startTime).toLocaleTimeString()} -{" "}
+                            {new Date(booking.endTime).toLocaleTimeString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Zap size={16} />
+                          <span>{booking.typeOfCharging} Charging</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <MapPin size={16} />
+                          <span>Slot #{booking.slotNumber}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="ml-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          booking.status === "COMPLETED"
+                            ? "bg-green-100 text-green-800"
+                            : booking.status === "CONFIRMED"
+                            ? "bg-blue-100 text-blue-800"
+                            : booking.status === "CANCELLED"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {booking.status}
+                      </span>
+                    </div>
+                  </div>
+              </div>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Booking Modal */}
+        <Modal
+          isOpen={showBookingModal}
+          onClose={() => {
+            setShowBookingModal(false);
+            setSelectedStation(null);
+          }}
+          title="Schedule Booking"
+          size="lg"
+        >
+          {selectedStation && (
+            <div className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-gray-800 mb-2">{selectedStation.name}</h3>
+                <p className="text-sm text-gray-600">
+                  {selectedStation.address.line1}, {selectedStation.address.town}
+                </p>
+              </div>
+
+              <Dropdown
+                label="Select Car"
+                value={selectedCarId}
+                onChange={(e) => setSelectedCarId(e.target.value)}
+                options={[
+                  { value: "", label: "Select a car" },
+                  ...cars.map((car) => ({
+                    value: car.id.toString(),
+                    label: `${car.name} ${car.model} (${car.number})`,
+                  })),
+                ]}
+              />
+
+              {selectedCarId && batteryData?.data?.data && (
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-1">Current Battery Status</p>
+                  <p className="text-lg font-semibold">
+                    SOC: {batteryData.data.data.soc.toFixed(1)}% | SOH:{" "}
+                    {batteryData.data.data.soh.toFixed(1)}%
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Last Updated: {new Date(batteryData.data.data.timestamp).toLocaleString()}
+                  </p>
+            </div>
+              )}
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <Input
+                  label="Date"
+                  type="date"
+                  value={bookingDate}
+                  onChange={(e) => setBookingDate(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                />
+                <Input
+                  label="Time"
+                  type="time"
+                  value={bookingTime}
+                  onChange={(e) => setBookingTime(e.target.value)}
+                />
+              </div>
+
+              <Dropdown
+                label="Charger Type"
+                value={chargerType}
+                onChange={(e) => setChargerType(e.target.value)}
+                options={[
+                  { value: "FAST", label: "Fast Charging" },
+                  { value: "SLOW", label: "Slow Charging" },
+                  { value: "DYNAMIC", label: "Dynamic" },
+                ]}
+              />
+
+              <div className="flex gap-3 justify-end pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowBookingModal(false);
+                    setSelectedStation(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleCreateBooking}
+                  isLoading={createBookingMutation.isPending}
+                >
+                  Confirm Booking
+                </Button>
+              </div>
+            </div>
+          )}
+        </Modal>
       </div>
     </div>
   );
 }
-
-export default Bookings;
