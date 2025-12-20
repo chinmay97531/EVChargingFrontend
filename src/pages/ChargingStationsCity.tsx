@@ -1,7 +1,7 @@
 import NavBar from "../components/Navbar";
 import { useParams, useNavigate } from "react-router-dom";
 
-const CITIES_BY_STATE = {
+const CITIES_BY_STATE: Record<string, string[]> = {
   "Andaman & Nicobar": ["Port Blair", "Garacharma", "Bombooflat", "Prothrapur"],
   "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Tirupati", "Nellore", "Kurnool"],
   "Arunachal Pradesh": ["Itanagar", "Naharlagun", "Tawang", "Ziro"],
@@ -57,7 +57,7 @@ function CitiesPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-6 gap-5 p-10">
-            {cities.map((city) => (
+            {cities.map((city: string) => (
               <div
                 key={city}
                 className={cardClass}

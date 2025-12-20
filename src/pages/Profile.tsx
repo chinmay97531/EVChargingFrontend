@@ -8,6 +8,7 @@ import { Button } from "../components/ui/Button";
 import { Modal } from "../components/ui/Modal";
 import { ChargingSchedulePredictor } from "../components/ChargingSchedulePredictor";
 import { useCars, useDeleteCar } from "../hooks/useCars";
+import { unwrap } from "../lib/apiHelper";
 import { useBatteryStatus } from "../hooks/useBatteryStatus";
 import { usePaymentData } from "../hooks/usePaymentData";
 import { useStatistics } from "../hooks/useStatistics";
@@ -34,11 +35,11 @@ export default function Profile() {
 
   const deleteCarMutation = useDeleteCar();
 
-  const cars = carsData?.data?.data || [];
-  const user = userData?.data?.data;
-  const batteryStatus = batteryData?.data?.data;
-  const paymentInfo = paymentData?.data?.data;
-  const statistics = statisticsData?.data?.data;
+  const cars = (unwrap(carsData) ?? []) as any[];
+  const user = unwrap(userData) as any;
+  const batteryStatus = unwrap(batteryData) as any;
+  const paymentInfo = unwrap(paymentData) as any;
+  const statistics = unwrap(statisticsData) as any;
 
   // Set first car as selected by default
   if (cars.length > 0 && !selectedCarId) {
@@ -66,28 +67,28 @@ export default function Profile() {
 
   // Transform chart data
   const socTrendData = statistics?.graphical?.socTrends
-    ? statistics.graphical.socTrends.labels.map((label, index) => ({
+    ? statistics.graphical.socTrends.labels.map((label: any, index: number) => ({
         date: label,
         soc: statistics.graphical.socTrends.datasets[0].data[index],
       }))
     : [];
 
   const revenueTrendData = statistics?.graphical?.revenueTrends
-    ? statistics.graphical.revenueTrends.labels.map((label, index) => ({
+    ? statistics.graphical.revenueTrends.labels.map((label: any, index: number) => ({
         date: label,
         revenue: statistics.graphical.revenueTrends.datasets[0].data[index],
       }))
     : [];
 
   const bookingTrendData = statistics?.graphical?.chargingSessionsOverTime
-    ? statistics.graphical.chargingSessionsOverTime.labels.map((label, index) => ({
+    ? statistics.graphical.chargingSessionsOverTime.labels.map((label: any, index: number) => ({
         date: label,
         sessions: statistics.graphical.chargingSessionsOverTime.datasets[0].data[index],
       }))
     : [];
 
   const energyConsumptionData = statistics?.graphical?.energyConsumption
-    ? statistics.graphical.energyConsumption.labels.map((label, index) => ({
+    ? statistics.graphical.energyConsumption.labels.map((label: any, index: number) => ({
         date: label,
         grid: statistics.graphical.energyConsumption.datasets[0].data[index],
         solar: statistics.graphical.energyConsumption.datasets[1].data[index],
@@ -256,7 +257,7 @@ export default function Profile() {
                 <Table
                   headers={["Date", "Amount", "Original", "Savings", "Mode", "Status"]}
                 >
-                  {paymentInfo.paymentRecords.map((record) => (
+                  {paymentInfo.paymentRecords.map((record: any) => (
                     <TableRow key={record.id}>
                       <TableCell>
                         {new Date(record.createdAt).toLocaleDateString()}
@@ -369,7 +370,7 @@ export default function Profile() {
               <Card title="Energy Consumption Trend" icon={<Zap size={20} />}>
                 <MultiLineChart
                   labels={statistics.graphical.energyConsumption.labels}
-                  datasets={statistics.graphical.energyConsumption.datasets.map((ds, idx) => ({
+                  datasets={statistics.graphical.energyConsumption.datasets.map((ds: any, idx: number) => ({
                     label: ds.label,
                     data: ds.data,
                     color: idx === 0 ? "#ef4444" : idx === 1 ? "#10b981" : "#3b82f6",

@@ -37,7 +37,7 @@ export const PieStats: React.FC<{ series: Point[] }> = ({ series }) => (
       <Legend />
       <Tooltip />
       <Pie data={series} dataKey="value" nameKey="label" cx="50%" cy="50%" outerRadius={100}>
-        {series.map((entry, index) => (
+        {series.map((_, index) => (
           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
         ))}
       </Pie>

@@ -25,7 +25,7 @@ export const MultiLineChart = ({ labels, datasets }: MultiLineChartProps) => {
 
   const chartData = labels.map((label, index) => {
     const dataPoint: Record<string, any> = { label };
-    datasets.forEach((dataset, datasetIndex) => {
+    datasets.forEach((dataset) => {
       dataPoint[dataset.label] = dataset.data[index];
     });
     return dataPoint;

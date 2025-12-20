@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Dashboard from "./pages/dashboard";
 import Auth from "./pages/Auth";
-import Profile from "./pages/Profile";
 import ChargingStations from "./pages/ChargingStations";
 import ChargingStationsCity from "./pages/ChargingStationsCity";
 import ChargingStationsState from "./pages/ChargingStationsState";
