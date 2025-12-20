@@ -10,6 +10,11 @@ npm install
 export VITE_BACKEND_URL="http://localhost:3000/api/v1"
 npm run dev
 ```
+Install Tailwind build dependencies if missing:
+
+```bash
+npm install -D tailwindcss postcss autoprefixer
+```
 
 Open `http://localhost:5173` in your browser.
 
@@ -129,6 +134,12 @@ npm run preview     # Preview production build
 Deploy `dist/` to any static hosting (Vercel, Netlify, AWS S3).
 
 Set `VITE_BACKEND_URL` environment variable to your production API URL.
+
+If you use the Python charging schedule model server, also set:
+
+```
+VITE_MODEL_URL=http://localhost:5001
+```
 
 ## Environment Variables
 

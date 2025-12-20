@@ -7,7 +7,8 @@ export const useProfile = () => {
   return useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      const { data } = await api.get('/profile')
+      // Backend exposes POST /api/v1/getUserDetails
+      const { data } = await api.post('/getUserDetails', {})
       return data.data as User
     },
   })
@@ -62,8 +63,9 @@ export const useGetChargingSessions = () => {
   return useQuery({
     queryKey: ['chargingSessions'],
     queryFn: async () => {
-      const { data } = await api.get('/getChargingSessions')
-      return (data.data as Booking[]) || []
+      // Backend expects POST /api/v1/getChargingSessions
+      const { data } = await api.post('/getChargingSessions', {})
+      return (data.data?.sessions as Booking[]) || []
     },
   })
 }
@@ -86,8 +88,9 @@ export const useBookings = () => {
   return useQuery({
     queryKey: ['bookings'],
     queryFn: async () => {
-      const { data } = await api.get('/bookings')
-      return (data.data as Booking[]) || []
+      // Use backend's paginated bookings endpoint
+      const { data } = await api.post('/getAllBookings', { limit: 50, offset: 0 })
+      return (data.data?.bookings as Booking[]) || []
     },
   })
 }
