@@ -8,7 +8,7 @@ const OCM_API_KEY =
   "b37e088c-05b2-4660-ba12-2c80cadc6704";
 
 /** Small geocoder using OpenStreetMap Nominatim (no key required) */
-async function geocodeCity(city, state) {
+async function geocodeCity(city: string, state: string) {
   const q = encodeURIComponent(`${city}, ${state}, India`);
   const url = `https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`;
   const res = await fetch(url, {
@@ -24,7 +24,7 @@ async function geocodeCity(city, state) {
 }
 
 /** Fetch stations from Open Charge Map near lat/lon within 500km */
-async function fetchStationsOCM({ lat, lon, distanceKm = 500 }) {
+async function fetchStationsOCM({ lat, lon, distanceKm = 500 }: { lat: number; lon: number; distanceKm?: number }) {
   const params = new URLSearchParams({
     output: "json",
     countrycode: "IN",
@@ -51,13 +51,13 @@ async function fetchStationsOCM({ lat, lon, distanceKm = 500 }) {
 }
 
 /** Shape OCM response into simple card data */
-function normalizeStations(raw) {
-  return raw.map((station) => {
+function normalizeStations(raw: any[]) {
+  return raw.map((station: any) => {
     const ai = station?.AddressInfo || {};
     const conns = Array.isArray(station?.Connections) ? station.Connections : [];
 
     // Count types + fast/slow + find max power
-    const typeCounts = {};
+    const typeCounts: Record<string, number> = {};
     let fast = 0;
     let slow = 0;
     let maxPowerKW = 0;
@@ -115,9 +115,21 @@ function StationsPage() {
   const stateName = decodeURIComponent(state || "");
   const cityName = decodeURIComponent(city || "");
 
+  interface Station {
+    id: string;
+    name: string;
+    address: string;
+    chargers: string;
+    availability: string;
+    lat?: number;
+    lon?: number;
+    distanceKm?: number | null;
+    directionsUrl?: string | null;
+  }
+
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-  const [stations, setStations] = useState([]);
+  const [stations, setStations] = useState<Station[]>([]);
 
   const headerTitle = useMemo(
     () => `${cityName}${stateName ? `, ${stateName}` : ""}`,
@@ -151,7 +163,7 @@ function StationsPage() {
 
         if (!cancelled) setStations(normalized);
       } catch (e) {
-        if (!cancelled) setErr(e?.message || "Failed to load stations");
+        if (!cancelled) setErr((e as Error)?.message || "Failed to load stations");
       } finally {
         if (!cancelled) setLoading(false);
       }

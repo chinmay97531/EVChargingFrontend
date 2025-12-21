@@ -43,7 +43,7 @@ function CitiesPage() {
   const navigate = useNavigate();
   const { state } = useParams();
   const stateName = decodeURIComponent(state || "");
-  const cities = CITIES_BY_STATE[stateName] || ["City 1", "City 2", "City 3", "City 4"];
+  const cities = (CITIES_BY_STATE as Record<string, string[]>)[stateName] || ["City 1", "City 2", "City 3", "City 4"];
 
   const cardClass = `h-400px w-400px border-gray-400 dark:border-gray-500 cursor-pointer border-2 px-6 py-2 rounded-4xl shadow-2xl transition-all duration-500 hover:scale-110 flex justify-center items-center`;
 
@@ -57,7 +57,7 @@ function CitiesPage() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-6 gap-5 p-10">
-            {cities.map((city) => (
+            {cities.map((city: string) => (
               <div
                 key={city}
                 className={cardClass}

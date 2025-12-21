@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Clock, MapPin, Search, Zap, Battery, Car, Plus } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Calendar, Clock, MapPin, Search, Zap } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
@@ -12,8 +12,9 @@ import { useBookings, useCreateBooking } from "../hooks/useBookings";
 import { useCars } from "../hooks/useCars";
 import { useBatteryStatus } from "../hooks/useBatteryStatus";
 import { stationService, Station } from "../services/station.service";
-import { bookingService } from "../services/booking.service";
-import NavBar from "../components/Navbar";
+import { Booking } from "../services/booking.service";
+import { Car } from "../services/car.service";
+import { BatteryStatus } from "../services/battery.service";
 
 type SearchType = "location" | "name" | "pincode" | "city";
 
@@ -37,8 +38,8 @@ export default function Bookings() {
   const createBookingMutation = useCreateBooking();
   const queryClient = useQueryClient();
 
-  const bookings = bookingsData?.data?.data?.sessions || [];
-  const cars = carsData?.data?.data || [];
+  const bookings: Booking[] = (bookingsData as any)?.data?.sessions || (bookingsData as any)?.sessions || (Array.isArray(bookingsData) ? bookingsData : []);
+  const cars: Car[] = (carsData as any)?.data?.cars || (carsData as any)?.data || (Array.isArray(carsData) ? carsData : []);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -116,7 +117,6 @@ export default function Bookings() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <NavBar />
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-8">Bookings</h1>
 
@@ -184,9 +184,9 @@ export default function Bookings() {
         )}
 
         {/* Current SOC/SOH Display */}
-        {selectedCarId && batteryData?.data?.data && (
+        {selectedCarId && batteryData?.data && (
           <div className="mb-6">
-            <BatteryDisplay batteryStatus={batteryData.data.data} />
+            <BatteryDisplay batteryStatus={batteryData.data} />
           </div>
         )}
 
@@ -198,7 +198,7 @@ export default function Bookings() {
             <p className="text-gray-500">No bookings found. Search and book a charging station to get started.</p>
           ) : (
             <div className="space-y-4">
-              {bookings.map((booking) => (
+              {bookings.map((booking: Booking) => (
                 <div
                   key={booking.id}
                   className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow"
@@ -279,22 +279,22 @@ export default function Bookings() {
                 onChange={(e) => setSelectedCarId(e.target.value)}
                 options={[
                   { value: "", label: "Select a car" },
-                  ...cars.map((car) => ({
+                  ...cars.map((car: Car) => ({
                     value: car.id.toString(),
                     label: `${car.name} ${car.model} (${car.number})`,
                   })),
                 ]}
               />
 
-              {selectedCarId && batteryData?.data?.data && (
+              {selectedCarId && batteryData?.data && (
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-gray-600 mb-1">Current Battery Status</p>
                   <p className="text-lg font-semibold">
-                    SOC: {batteryData.data.data.soc.toFixed(1)}% | SOH:{" "}
-                    {batteryData.data.data.soh.toFixed(1)}%
+                    SOC: {(batteryData.data as BatteryStatus).soc?.toFixed(1) || 'N/A'}% | SOH:{" "}
+                    {(batteryData.data as BatteryStatus).soh?.toFixed(1) || 'N/A'}%
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Last Updated: {new Date(batteryData.data.data.timestamp).toLocaleString()}
+                    Last Updated: {batteryData.data.timestamp ? new Date((batteryData.data as BatteryStatus).timestamp).toLocaleString() : 'N/A'}
                   </p>
             </div>
               )}

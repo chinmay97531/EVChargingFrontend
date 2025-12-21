@@ -66,8 +66,15 @@ function Authentication() {
   }
 
   return (
-    <div className="flex justify-center items-center font-sans-serif min-h-screen bg-gradient-to-b from-[#0f0c29] via-[#302b63] to-[#24243e]">
-      <div className="w-[350px] h-[440px] overflow-hidden relative border rounded-2xl shadow-[5px_20px_50px_rgba(0,0,0,1)]">
+    <div className="flex justify-center items-center font-sans-serif min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-yellow-400 rounded-full opacity-20 blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-pink-500 rounded-full opacity-20 blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-400 rounded-full opacity-20 blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+      
+      <div className="w-[380px] h-[500px] overflow-hidden relative border-2 border-white/20 rounded-3xl shadow-2xl backdrop-blur-md bg-white/10 animate-slide-up">
         <input
           type="checkbox"
           id="chk"
@@ -81,8 +88,8 @@ function Authentication() {
             <label
               htmlFor="chk"
               aria-hidden="true"
-              className={`text-[#fff] justify-center flex mt-[50px] text-[2.3em] font-bold cursor-pointer transition-transform duration-800 ease-in-out ${
-                isChecked ? "scale-100" : "scale-60"
+              className={`text-white justify-center flex mt-[50px] text-[2.3em] font-bold cursor-pointer transition-all duration-500 ease-in-out ${
+                isChecked ? "scale-100 opacity-100" : "scale-75 opacity-50"
               }`}
             >
               Sign up
@@ -92,26 +99,26 @@ function Authentication() {
               type="text"
               name="txt"
               placeholder="User Name"
-              className="w-3/5 h-8 bg-[#e0dede] flex mx-auto my-5 p-3 border-none outline-none rounded-md"
+              className="w-3/5 h-10 bg-white/90 backdrop-blur-sm flex mx-auto my-4 p-3 border-2 border-white/30 outline-none rounded-xl focus:border-indigo-400 focus:ring-2 focus:ring-indigo-300 transition-all"
             />
             <input
               ref={emailUpRef}
               type="email"
               name="email"
               placeholder="Email"
-              className="w-3/5 h-8 bg-[#e0dede] flex mx-auto my-5 p-3 border-none outline-none rounded-md"
+              className="w-3/5 h-10 bg-white/90 backdrop-blur-sm flex mx-auto my-4 p-3 border-2 border-white/30 outline-none rounded-xl focus:border-indigo-400 focus:ring-2 focus:ring-indigo-300 transition-all"
             />
             <input
               ref={passwordUpRef}
               type="password"
               name="pswd"
               placeholder="Password"
-              className="w-3/5 h-8 bg-[#e0dede] flex mx-auto my-5 p-3 border-none outline-none rounded-md"
+              className="w-3/5 h-10 bg-white/90 backdrop-blur-sm flex mx-auto my-4 p-3 border-2 border-white/30 outline-none rounded-xl focus:border-indigo-400 focus:ring-2 focus:ring-indigo-300 transition-all"
             />
             <button
               type="submit"
               disabled={isLoading}
-              className="w-3/5 h-10 mx-auto mt-[30px] block text-white bg-[#573b8a] font-bold text-base rounded-md border-none outline-none transition-colors duration-200 ease-in hover:bg-[#6d44b8] cursor-pointer disabled:opacity-50"
+              className="w-3/5 h-12 mx-auto mt-[30px] block text-white bg-gradient-to-r from-indigo-600 to-purple-600 font-bold text-base rounded-xl border-none outline-none transition-all duration-300 hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl hover:scale-105 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isLoading ? "Signing up..." : "Sign up"}
             </button>
@@ -119,15 +126,15 @@ function Authentication() {
         </div>
 
         <div
-          className={`login h-[480px] bg-[#eee] rounded-[60%/10%] absolute top-0 w-full transition-transform duration-800 ease-in-out ${
-            isChecked ? "translate-y-[340px]" : "translate-y-[100px]"
+          className={`login h-[520px] bg-gradient-to-br from-white to-indigo-50 rounded-[60%/10%] absolute top-0 w-full transition-all duration-700 ease-in-out shadow-2xl ${
+            isChecked ? "translate-y-[360px]" : "translate-y-[80px]"
           }`}
         >
           <form onSubmit={handleSignin}>
             <label
               htmlFor="chk"
-              className={`text-[#573b8a] text-[2.3em] flex justify-center mt-[20px] font-bold cursor-pointer transition-transform duration-800 ease-in-out ${
-                isChecked ? "scale-60" : "scale-100"
+              className={`bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent text-[2.3em] flex justify-center mt-[20px] font-bold cursor-pointer transition-all duration-500 ease-in-out ${
+                isChecked ? "scale-75 opacity-50" : "scale-100 opacity-100"
               }`}
               aria-hidden="true"
             >
@@ -139,7 +146,7 @@ function Authentication() {
               name="email"
               placeholder="Email"
               required
-              className="w-3/5 h-10 bg-[#e0dede] flex mx-auto my-5 p-3 border-none outline-none rounded-md"
+              className="w-3/5 h-10 bg-white/90 backdrop-blur-sm flex mx-auto my-4 p-3 border-2 border-indigo-200 outline-none rounded-xl focus:border-indigo-400 focus:ring-2 focus:ring-indigo-300 transition-all"
             />
             <input
               ref={passwordInRef}
@@ -147,12 +154,12 @@ function Authentication() {
               name="pswd"
               placeholder="Password"
               required
-              className="w-3/5 h-10 bg-[#e0dede] flex mx-auto my-5 p-3 border-none outline-none rounded-md"
+              className="w-3/5 h-10 bg-white/90 backdrop-blur-sm flex mx-auto my-4 p-3 border-2 border-indigo-200 outline-none rounded-xl focus:border-indigo-400 focus:ring-2 focus:ring-indigo-300 transition-all"
             />
             <button
               type="submit"
               disabled={isLoading}
-              className="w-3/5 h-10 mx-auto mt-[30px] block text-white bg-[#573b8a] font-bold text-base rounded-md border-none outline-none transition-colors duration-200 ease-in hover:bg-[#6d44b8] cursor-pointer disabled:opacity-50"
+              className="w-3/5 h-12 mx-auto mt-[30px] block text-white bg-gradient-to-r from-indigo-600 to-purple-600 font-bold text-base rounded-xl border-none outline-none transition-all duration-300 hover:from-indigo-700 hover:to-purple-700 hover:shadow-xl hover:scale-105 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {isLoading ? "Logging in..." : "Login"}
             </button>

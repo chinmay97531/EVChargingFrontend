@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { User, Car, Battery, DollarSign, TrendingUp, Zap, Calendar, Trash2, Key } from "lucide-react";
+import { User, Car as CarIcon, Battery, DollarSign, TrendingUp, Zap, Calendar, Trash2, Key } from "lucide-react";
 import { Card } from "../components/ui/Card";
 import { BatteryDisplay } from "../components/BatteryDisplay";
 import { Table, TableRow, TableCell } from "../components/ui/Table";
@@ -12,6 +12,8 @@ import { useBatteryStatus } from "../hooks/useBatteryStatus";
 import { usePaymentData } from "../hooks/usePaymentData";
 import { useStatistics } from "../hooks/useStatistics";
 import { userService } from "../services/user.service";
+import { Car } from "../services/car.service";
+import { BatteryStatus } from "../services/battery.service";
 import { LineChart } from "../components/charts/LineChart";
 import { BarChart } from "../components/charts/BarChart";
 import { MultiLineChart } from "../components/charts/MultiLineChart";
@@ -34,11 +36,11 @@ export default function Profile() {
 
   const deleteCarMutation = useDeleteCar();
 
-  const cars = carsData?.data?.data || [];
-  const user = userData?.data?.data;
-  const batteryStatus = batteryData?.data?.data;
-  const paymentInfo = paymentData?.data?.data;
-  const statistics = statisticsData?.data?.data;
+  const cars: Car[] = (carsData as any)?.data?.cars || (carsData as any)?.data || (Array.isArray(carsData) ? carsData : []);
+  const user = (userData as any)?.data?.data || userData;
+  const batteryStatus: BatteryStatus | undefined = (batteryData as any)?.data?.data || batteryData?.data;
+  const paymentInfo = (paymentData as any)?.data?.data || paymentData?.data;
+  const statistics = (statisticsData as any)?.data?.data || statisticsData?.data;
 
   // Set first car as selected by default
   if (cars.length > 0 && !selectedCarId) {
@@ -66,28 +68,28 @@ export default function Profile() {
 
   // Transform chart data
   const socTrendData = statistics?.graphical?.socTrends
-    ? statistics.graphical.socTrends.labels.map((label, index) => ({
+    ? statistics.graphical.socTrends.labels.map((label: string, index: number) => ({
         date: label,
         soc: statistics.graphical.socTrends.datasets[0].data[index],
       }))
     : [];
 
   const revenueTrendData = statistics?.graphical?.revenueTrends
-    ? statistics.graphical.revenueTrends.labels.map((label, index) => ({
+    ? statistics.graphical.revenueTrends.labels.map((label: string, index: number) => ({
         date: label,
         revenue: statistics.graphical.revenueTrends.datasets[0].data[index],
       }))
     : [];
 
   const bookingTrendData = statistics?.graphical?.chargingSessionsOverTime
-    ? statistics.graphical.chargingSessionsOverTime.labels.map((label, index) => ({
+    ? statistics.graphical.chargingSessionsOverTime.labels.map((label: string, index: number) => ({
         date: label,
         sessions: statistics.graphical.chargingSessionsOverTime.datasets[0].data[index],
       }))
     : [];
 
   const energyConsumptionData = statistics?.graphical?.energyConsumption
-    ? statistics.graphical.energyConsumption.labels.map((label, index) => ({
+    ? statistics.graphical.energyConsumption.labels.map((label: string, index: number) => ({
         date: label,
         grid: statistics.graphical.energyConsumption.datasets[0].data[index],
         solar: statistics.graphical.energyConsumption.datasets[1].data[index],
@@ -120,7 +122,7 @@ export default function Profile() {
         </Card>
 
         {/* Find Cars Section with API Key */}
-        <Card title="Find Cars" icon={<Car size={20} />} className="mb-6">
+        <Card title="Find Cars" icon={<CarIcon size={20} />} className="mb-6">
           <div className="space-y-4">
             <div>
               <p className="text-sm text-gray-600 mb-2">API Key</p>
@@ -177,7 +179,7 @@ export default function Profile() {
 
         {/* Car Details */}
         {selectedCarId && cars.find((c) => c.id === selectedCarId) && (
-          <Card title="Car Details" icon={<Car size={20} />} className="mb-6">
+          <Card title="Car Details" icon={<CarIcon size={20} />} className="mb-6">
             {(() => {
               const car = cars.find((c) => c.id === selectedCarId);
               return car ? (
@@ -256,7 +258,7 @@ export default function Profile() {
                 <Table
                   headers={["Date", "Amount", "Original", "Savings", "Mode", "Status"]}
                 >
-                  {paymentInfo.paymentRecords.map((record) => (
+                  {paymentInfo.paymentRecords.map((record: any) => (
                     <TableRow key={record.id}>
                       <TableCell>
                         {new Date(record.createdAt).toLocaleDateString()}
@@ -369,7 +371,7 @@ export default function Profile() {
               <Card title="Energy Consumption Trend" icon={<Zap size={20} />}>
                 <MultiLineChart
                   labels={statistics.graphical.energyConsumption.labels}
-                  datasets={statistics.graphical.energyConsumption.datasets.map((ds, idx) => ({
+                  datasets={statistics.graphical.energyConsumption.datasets.map((ds: any, idx: number) => ({
                     label: ds.label,
                     data: ds.data,
                     color: idx === 0 ? "#ef4444" : idx === 1 ? "#10b981" : "#3b82f6",

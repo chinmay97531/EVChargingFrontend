@@ -7,9 +7,9 @@ import Mahindra2 from "../Images/MahindraXEV9e.png";
 import MG1 from "../Images/MGCometEV.png";
 
 function Hero() {
-  const [battery1, setBattery] = useState(75);
-  const [timeLeft1, setTimeLeft] = useState("1h 30m");
-  const [amountToPay1, setAmountToPay] = useState(150);
+  const [battery1] = useState(75);
+  const [timeLeft1] = useState("1h 30m");
+  const [amountToPay1] = useState(150);
 
   return (
     <div className="flex justify-center items-center translate-y-50 dark:text-white">
