@@ -1,18 +1,22 @@
 import api from "./api";
 
 export interface ChargingScheduleRequest {
-  hour: number;
-  demand: number;
-  solar: number;
+  current_soc: number;
+  required_soc: number;
+  hours_remaining?: number;
+  plug_out_time?: string;
+  preference?: string;
+  solar_kw?: number;
+  price?: number;
+  station_battery_kwh?: number;
+  time_slot?: number;
 }
 
 export interface ChargingScheduleResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    action: number;
-    status: string;
-  };
+  status: string;
+  result?: any;
+  message?: string;
+  error?: string;
 }
 
 export const chargingScheduleService = {

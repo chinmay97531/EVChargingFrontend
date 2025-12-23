@@ -46,7 +46,7 @@ function Dashboard() {
                 className="group relative px-8 py-4 bg-white text-indigo-600 rounded-xl font-bold text-lg shadow-2xl hover:shadow-white/50 transition-all duration-300 transform hover:scale-105 overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                <span className="relative z-10 flex items-center gap-2 text-white group-hover:text-white transition-colors">
+                <span className="relative z-10 flex items-center gap-2 text-black group-hover:text-white transition-colors">
                   <MapPin className="w-5 h-5" />
                   Find Stations
                 </span>
@@ -124,29 +124,6 @@ function Dashboard() {
           
           <div className="max-w-4xl mx-auto animate-slide-up">
             <ChargingSchedulePredictor />
-          </div>
-        </div>
-
-        {/* Stats Section */}
-        <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 rounded-3xl p-12 text-white shadow-2xl relative overflow-hidden">
-          <div className="absolute inset-0 bg-black opacity-10"></div>
-          <div className="relative grid md:grid-cols-4 gap-8 text-center">
-            <div className="animate-fade-in">
-              <div className="text-6xl font-bold mb-2 bg-gradient-to-r from-yellow-300 to-white bg-clip-text text-transparent">10K+</div>
-              <div className="text-indigo-200 text-lg">Active Users</div>
-            </div>
-            <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <div className="text-6xl font-bold mb-2 bg-gradient-to-r from-yellow-300 to-white bg-clip-text text-transparent">500+</div>
-              <div className="text-indigo-200 text-lg">Charging Stations</div>
-            </div>
-            <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <div className="text-6xl font-bold mb-2 bg-gradient-to-r from-yellow-300 to-white bg-clip-text text-transparent">50K+</div>
-              <div className="text-indigo-200 text-lg">Successful Charges</div>
-            </div>
-            <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <div className="text-6xl font-bold mb-2 bg-gradient-to-r from-yellow-300 to-white bg-clip-text text-transparent">95%</div>
-              <div className="text-indigo-200 text-lg">Satisfaction Rate</div>
-            </div>
           </div>
         </div>
       </div>

@@ -29,12 +29,12 @@ const StatsDashboard: React.FC = () => {
           {energy ? <BarStats series={energy} /> : <div>Loading...</div>}
         </div>
 
-        <div className="bg-white shadow rounded p-4">
+        {/* <div className="bg-white shadow rounded p-4">
           <h2 className="text-lg font-medium mb-2">State of Charge (SoC) Trends</h2>
           {soc ? <LineStats series={soc} data={soc} /> : <div>Loading...</div>}
-        </div>
+        </div> */}
 
-        <div className="bg-white shadow rounded p-4 lg:col-span-2">
+        <div className="bg-white shadow rounded p-4">
           <h2 className="text-lg font-medium mb-2">Payments By Mode</h2>
           {payments ? <PieStats series={payments as any} /> : <div>Loading...</div>}
         </div>

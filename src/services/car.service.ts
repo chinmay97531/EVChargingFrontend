@@ -35,7 +35,7 @@ export const carService = {
   },
 
   deleteCar: async (carId: number): Promise<DeleteCarResponse> => {
-    const response = await api.delete(`/cars/${carId}`);
+    const response = await api.post("/deleteCarDetails", { carId });
     return response.data;
   },
 };

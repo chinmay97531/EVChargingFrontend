@@ -33,7 +33,6 @@ function Authentication() {
     setIsLoading(true);
     try {
       await signup({ username, email, password });
-      alert("You have signed up successfully!");
       navigate("/profile");
     } catch (error: any) {
       alert(error.response?.data?.message || "Error signing up");
@@ -74,7 +73,7 @@ function Authentication() {
         <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-indigo-400 rounded-full opacity-20 blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
       </div>
       
-      <div className="w-[380px] h-[500px] overflow-hidden relative border-2 border-white/20 rounded-3xl shadow-2xl backdrop-blur-md bg-white/10 animate-slide-up">
+      <div className="w-[400px] h-[450px] overflow-hidden relative border-2 border-white/20 rounded-3xl shadow-2xl backdrop-blur-md bg-white/10 animate-slide-up">
         <input
           type="checkbox"
           id="chk"
@@ -127,7 +126,7 @@ function Authentication() {
 
         <div
           className={`login h-[520px] bg-gradient-to-br from-white to-indigo-50 rounded-[60%/10%] absolute top-0 w-full transition-all duration-700 ease-in-out shadow-2xl ${
-            isChecked ? "translate-y-[360px]" : "translate-y-[80px]"
+            isChecked ? "translate-y-[360px]" : "translate-y-[60px]"
           }`}
         >
           <form onSubmit={handleSignin}>

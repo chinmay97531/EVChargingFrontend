@@ -20,15 +20,15 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 Revolutionizing electric vehicle charging with smart, sustainable solutions for a greener future.
               </p>
               <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://www.instagram.com/chinmaymittal975/" className="text-gray-400 hover:text-white transition-colors">
                   <span className="sr-only">Facebook</span>
                   📘
                 </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://x.com/mittal_chi26558" className="text-gray-400 hover:text-white transition-colors">
                   <span className="sr-only">Twitter</span>
                   🐦
                 </a>
-                <a href="#" className="text-gray-400 hover:text-white transition-colors">
+                <a href="https://www.linkedin.com/in/chinmay-mittal-695825257/" className="text-gray-400 hover:text-white transition-colors">
                   <span className="sr-only">LinkedIn</span>
                   💼
                 </a>
@@ -41,22 +41,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <li><a href="/vehicles" className="text-gray-400 hover:text-white transition-colors">Vehicles</a></li>
                 <li><a href="/bookings" className="text-gray-400 hover:text-white transition-colors">Bookings</a></li>
                 <li><a href="/stats" className="text-gray-400 hover:text-white transition-colors">Statistics</a></li>
+                <li><a href="mailto:chinmaymittal0000@gmail.com" className="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
               </ul>
             </div>
-            <div>
-              <h4 className="text-lg font-semibold text-white mb-4">Support</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-700/50 mt-8 pt-8 text-center">
-            <p className="text-gray-400">
-              &copy; 2025 EVParking. All rights reserved. Built with <span className="text-pink-400 animate-pulse">❤️</span> for sustainable mobility.
-            </p>
           </div>
         </div>
       </footer>

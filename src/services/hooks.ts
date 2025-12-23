@@ -7,7 +7,7 @@ export const useProfile = () => {
   return useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
-      const { data } = await api.get('/profile')
+      const { data } = await api.post('/getUserDetails', {})
       return data.data as User
     },
   })
@@ -19,21 +19,55 @@ export const useCarDetails = () => {
     queryKey: ['cars'],
     queryFn: async () => {
       const { data } = await api.post('/getCarDetails', {})
-      return (data.data as Car[]) || []
+      return (data.data.cars as Car[]) || []
     },
   })
 }
 
 export const useInsertCar = () => {
-  const qc = useQueryClient()
+  const qc = useQueryClient();
+
   return useMutation({
     mutationFn: async (payload: Partial<Car>) => {
-      const { data } = await api.post('/insertCarData', payload)
-      return data
+      const token = localStorage.getItem('token'); 
+
+      // 1. Map Frontend keys to Backend's expected keys (including Backend typos)
+      const backendPayload = {
+        carName: payload.name,
+        carModel: payload.model,
+        carNumber: payload.number,
+        
+        // Backend uses 'Battrey' (typo) instead of 'Battery'
+        currentBattreyHealth: payload.currentBatteryHealth,
+        capacityOfBattrey: payload.capacityOfBattery,
+        currentBattreyStatus: payload.currentBatteryStatus,
+
+        typeOfPort: payload.typeOfPort,
+
+        // Backend expects a string "Fast"/"Slow", frontend has boolean
+        FastAndSlow: payload.fastSupporting ? "Fast" : "Slow" 
+      };
+
+      // 2. Send the mapped payload
+      const { data } = await api.post('/insertCarData', backendPayload, {
+        headers: {
+          // Standard convention is 'Authorization', not 'token'. 
+          // If your middleware specifically needs 'token', change this back to 'token'.
+          Authorization: `Bearer ${token}`, 
+          'Content-Type': 'application/json',
+        },
+      });
+
+      return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['cars'] })
-  })
-}
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['cars'] });
+    },
+    onError: (error) => {
+      console.error("Failed to insert car:", error);
+    }
+  });
+};
 
 export const useDeleteCar = () => {
   const qc = useQueryClient()
@@ -62,8 +96,8 @@ export const useGetChargingSessions = () => {
   return useQuery({
     queryKey: ['chargingSessions'],
     queryFn: async () => {
-      const { data } = await api.get('/getChargingSessions')
-      return (data.data as Booking[]) || []
+      const { data } = await api.post('/getChargingSessions', {})
+      return (data.data.sessions as Booking[]) || []
     },
   })
 }
@@ -86,7 +120,7 @@ export const useBookings = () => {
   return useQuery({
     queryKey: ['bookings'],
     queryFn: async () => {
-      const { data } = await api.get('/bookings')
+      const { data } = await api.post('/getAllBookings', { limit: 50, offset: 0 })
       return (data.data as Booking[]) || []
     },
   })
